@@ -202,15 +202,16 @@
         <div id="status"></div>
 
         <div id="gameBoard">
-            <button class="cell" ontouchstart="handleCellClick(0)" onclick="handleCellClick(0)"></button>
-            <button class="cell" ontouchstart="handleCellClick(1)" onclick="handleCellClick(1)"></button>
-            <button class="cell" ontouchstart="handleCellClick(2)" onclick="handleCellClick(2)"></button>
-            <button class="cell" ontouchstart="handleCellClick(3)" onclick="handleCellClick(3)"></button>
-            <button class="cell" ontouchstart="handleCellClick(4)" onclick="handleCellClick(4)"></button>
-            <button class="cell" ontouchstart="handleCellClick(5)" onclick="handleCellClick(5)"></button>
-            <button class="cell" ontouchstart="handleCellClick(6)" onclick="handleCellClick(6)"></button>
-            <button class="cell" ontouchstart="handleCellClick(7)" onclick="handleCellClick(7)"></button>
-            <button class="cell" ontouchstart="handleCellClick(8)" onclick="handleCellClick(8)"></button>
+            <button class="cell" onclick="makeMove(0)"></button>
+            <button class="cell" onclick="makeMove(1)"></button>
+            <button class="cell" onclick="makeMove(2)"></button>
+            <button class="cell" onclick="makeMove(3)"></button>
+            <button class="cell" onclick="makeMove(4)"></button>
+            <button class="cell" onclick="makeMove(5)"></button>
+            <button class="cell" onclick="makeMove(6)"></button>
+            <button class="cell" onclick="makeMove(7)"></button>
+            <button class="cell" onclick="makeMove(8)"></button>
+
         </div>
     </div>
 
@@ -239,14 +240,17 @@
             }
         }
 
-        function handleCellClick(cellIndex) {
-            event.preventDefault(); // Prevent double-firing
-            if (event.type === 'click' && event.clientX === 0 && event.clientY === 0) {
-                // Ignore synthetic click events from touch
-                return;
-            }
-            makeMove(cellIndex);
+function makeMove(cellIndex) {
+    if (currentTurn) {
+        const cell = document.getElementsByClassName('cell')[cellIndex];
+        if (!cell.textContent) {
+            socket.emit('makeMove', { 
+                cellIndex, 
+                gameCode: document.getElementById('gameCode').textContent.split(': ')[1] 
+            });
         }
+    }
+}
 
         function copyGameCode() {
             const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];

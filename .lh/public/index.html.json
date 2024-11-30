@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 11,
+            "activePatchIndex": 13,
             "patches": [
                 {
                     "date": 1732963695931,
@@ -52,6 +52,14 @@
                 {
                     "date": 1732965069724,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -308,8 +308,12 @@\n             document.getElementById('gameBoard').style.display = 'grid';\n             document.getElementById('joinForm').style.display = 'none';\n             playerMark = 'X';\n             addPopAnimation(document.getElementById('gameBoard'));\n+\n+            // Update URL with game code\n+            const newUrl = `${window.location.pathname}?code=${gameCode}`;\n+            window.history.pushState({ path: newUrl }, '', newUrl);\n         });\n \n         socket.on('gameJoined', (data) => {\n             document.getElementById('gameBoard').style.display = 'grid';\n"
+                },
+                {
+                    "date": 1732965289268,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -201,17 +201,18 @@\n         \n         <div id=\"status\"></div>\n \n         <div id=\"gameBoard\">\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(0)\" onclick=\"handleCellClick(0)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(1)\" onclick=\"handleCellClick(1)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(2)\" onclick=\"handleCellClick(2)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(3)\" onclick=\"handleCellClick(3)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(4)\" onclick=\"handleCellClick(4)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(5)\" onclick=\"handleCellClick(5)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(6)\" onclick=\"handleCellClick(6)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(7)\" onclick=\"handleCellClick(7)\"></button>\n-            <button class=\"cell\" ontouchstart=\"handleCellClick(8)\" onclick=\"handleCellClick(8)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(0)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(1)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(2)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(3)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(4)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(5)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(6)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(7)\"></button>\n+            <button class=\"cell\" onclick=\"makeMove(8)\"></button>\n+\n         </div>\n     </div>\n \n     <script>\n@@ -238,17 +239,10 @@\n                 copyGameCode();\n             }\n         }\n \n-        function handleCellClick(cellIndex) {\n-            event.preventDefault(); // Prevent double-firing\n-            if (event.type === 'click' && event.clientX === 0 && event.clientY === 0) {\n-                // Ignore synthetic click events from touch\n-                return;\n-            }\n-            makeMove(cellIndex);\n-        }\n \n+\n         function copyGameCode() {\n             const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];\n             const shareUrl = `${window.location.origin}${window.location.pathname}?code=${gameCode}`;\n             \n"
+                },
+                {
+                    "date": 1732965297860,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -239,10 +239,20 @@\n                 copyGameCode();\n             }\n         }\n \n+function makeMove(cellIndex) {\n+    if (currentTurn) {\n+        const cell = document.getElementsByClassName('cell')[cellIndex];\n+        if (!cell.textContent) {\n+            socket.emit('makeMove', { \n+                cellIndex, \n+                gameCode: document.getElementById('gameCode').textContent.split(': ')[1] \n+            });\n+        }\n+    }\n+}\n \n-\n         function copyGameCode() {\n             const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];\n             const shareUrl = `${window.location.origin}${window.location.pathname}?code=${gameCode}`;\n             \n"
                 }
             ],
             "date": 1732963695931,
