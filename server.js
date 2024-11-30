@@ -68,34 +68,50 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on('makeMove', ({ cellIndex, gameCode }) => {
-        const game = games.get(gameCode);
-        if (!game) return;
+// In your server.js
+socket.on('makeMove', ({ cellIndex, gameCode }) => {
+    const game = games.get(gameCode);
+    if (!game) {
+        socket.emit('error', 'Game not found');
+        return;
+    }
 
-        const playerIndex = game.players.indexOf(socket.id);
-        const playerMark = playerIndex === 0 ? 'X' : 'O';
+    const playerIndex = game.players.indexOf(socket.id);
+    if (playerIndex === -1) {
+        socket.emit('error', 'Player not in game');
+        return;
+    }
 
-        if (game.currentPlayer !== playerMark || game.board[cellIndex] !== '') {
-            return;
-        }
+    const playerMark = playerIndex === 0 ? 'X' : 'O';
 
-        game.board[cellIndex] = playerMark;
-        game.currentPlayer = game.currentPlayer === 'X' ? 'O' : 'X';
+    // Validate turn
+    if (game.currentPlayer !== playerMark || game.board[cellIndex] !== '') {
+        socket.emit('error', 'Invalid move');
+        return;
+    }
 
-        const winner = checkWinner(game.board);
-        if (winner) {
-            io.to(gameCode).emit('gameOver', {
-                board: game.board,
-                winner: winner === 'draw' ? null : winner
-            });
-            games.delete(gameCode);
-        } else {
-            io.to(gameCode).emit('updateGame', {
-                board: game.board,
-                currentPlayer: game.currentPlayer
-            });
-        }
+    // Make move
+    game.board[cellIndex] = playerMark;
+    
+    // Switch turns
+    game.currentPlayer = game.currentPlayer === 'X' ? 'O' : 'X';
+
+    // Broadcast updated game state
+    io.to(gameCode).emit('updateGame', {
+        board: game.board,
+        currentPlayer: game.currentPlayer
     });
+
+    // Check for winner
+    const winner = checkWinner(game.board);
+    if (winner) {
+        io.to(gameCode).emit('gameOver', {
+            board: game.board,
+            winner: winner === 'draw' ? null : winner
+        });
+        games.delete(gameCode);
+    }
+});
 
     socket.on('disconnect', () => {
         // Clean up any games where this player was participating
