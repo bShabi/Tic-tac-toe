@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multiplayer Tic-tac-toe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        #gameBoard {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+
+        .cell {
+            width: 90px;
+            height: 90px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            font-size: 2.5em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .cell:hover {
+            background: #e9ecef;
+        }
+
+        #joinForm {
+            margin-bottom: 20px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #status {
+            margin: 20px 0;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        #gameCode {
+            display: none;
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Multiplayer Tic-tac-toe</h1>
+        
+        <div id="joinForm">
+            <input type="text" id="gameCodeInput" placeholder="Enter game code">
+            <button onclick="joinGame()">Join Game</button>
+            <button onclick="createGame()">Create New Game</button>
+        </div>
+
+        <div id="gameCode"></div>
+        <div id="status"></div>
+
+        <div id="gameBoard">
+            <button class="cell" onclick="makeMove(0)"></button>
+            <button class="cell" onclick="makeMove(1)"></button>
+            <button class="cell" onclick="makeMove(2)"></button>
+            <button class="cell" onclick="makeMove(3)"></button>
+            <button class="cell" onclick="makeMove(4)"></button>
+            <button class="cell" onclick="makeMove(5)"></button>
+            <button class="cell" onclick="makeMove(6)"></button>
+            <button class="cell" onclick="makeMove(7)"></button>
+            <button class="cell" onclick="makeMove(8)"></button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('ws://localhost:3000');
+        let playerMark = '';
+        let currentTurn = false;
+
+        function createGame() {
+            socket.emit('createGame');
+        }
+
+        function joinGame() {
+            const code = document.getElementById('gameCodeInput').value;
+            if (code) {
+                socket.emit('joinGame', code);
+            }
+        }
+
+        function makeMove(cellIndex) {
+            if (currentTurn) {
+                socket.emit('makeMove', { cellIndex, gameCode: document.getElementById('gameCode').textContent.split(': ')[1] });
+            }
+        }
+
+        socket.on('gameCreated', (gameCode) => {
+            document.getElementById('gameCode').style.display = 'block';
+            document.getElementById('gameCode').textContent = 'Game Code: ' + gameCode;
+            document.getElementById('status').textContent = 'Waiting for opponent...';
+            document.getElementById('gameBoard').style.display = 'grid';
+            document.getElementById('joinForm').style.display = 'none';
+            playerMark = 'X';
+        });
+
+        socket.on('gameJoined', (data) => {
+            document.getElementById('gameBoard').style.display = 'grid';
+            document.getElementById('joinForm').style.display = 'none';
+            document.getElementById('status').textContent = "Game started! You are " + data.mark;
+            playerMark = data.mark;
+            currentTurn = data.mark === 'X';
+        });
+
+        socket.on('updateGame', (data) => {
+            const cells = document.getElementsByClassName('cell');
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].textContent = data.board[i];
+            }
+            currentTurn = data.currentPlayer === playerMark;
+            document.getElementById('status').textContent = currentTurn ? 'Your turn!' : "Opponent's turn";
+        });
+
+        socket.on('gameOver', (data) => {
+            const cells = document.getElementsByClassName('cell');
+            for (let i = 0; i < cells.length; i++) {
+                cells[i].textContent = data.board[i];
+            }
+            document.getElementById('status').textContent = data.winner ? 
+                (data.winner === playerMark ? 'You won!' : 'You lost!') : 
+                'Game ended in a draw!';
+            currentTurn = false;
+        });
+
+        socket.on('error', (message) => {
+            alert(message);
+        });
+    </script>
+</body>
+</html>
