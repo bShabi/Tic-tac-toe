@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Multiplayer Tic-tac-toe</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -152,8 +153,15 @@
         }
 
         @keyframes pop {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         /* Mobile Responsiveness */
@@ -182,10 +190,11 @@
     </style>
     <script src="/socket.io/socket.io.js"></script>
 </head>
+
 <body>
     <div class="container">
         <h1>Tic-tac-toe</h1>
-        
+
         <div id="joinForm">
             <div class="input-group">
                 <input type="text" id="gameCodeInput" placeholder="Enter game code" autocomplete="off">
@@ -198,9 +207,8 @@
             <div id="gameCode" onclick="copyGameCode()"></div>
             <button onclick="shareGameCode()" class="share-button">Share Code</button>
         </div>
-        
-        <div id="status"></div>
 
+        <div id="status"></div>
         <div id="gameBoard">
             <button class="cell" onclick="makeMove(0)"></button>
             <button class="cell" onclick="makeMove(1)"></button>
@@ -211,7 +219,6 @@
             <button class="cell" onclick="makeMove(6)"></button>
             <button class="cell" onclick="makeMove(7)"></button>
             <button class="cell" onclick="makeMove(8)"></button>
-
         </div>
     </div>
 
@@ -240,22 +247,22 @@
             }
         }
 
-function makeMove(cellIndex) {
-    if (currentTurn) {
-        const cell = document.getElementsByClassName('cell')[cellIndex];
-        if (!cell.textContent) {
-            socket.emit('makeMove', { 
-                cellIndex, 
-                gameCode: document.getElementById('gameCode').textContent.split(': ')[1] 
-            });
+        function makeMove(cellIndex) {
+            if (currentTurn) {
+                const cell = document.getElementsByClassName('cell')[cellIndex];
+                if (!cell.textContent) {
+                    socket.emit('makeMove', {
+                        cellIndex,
+                        gameCode: document.getElementById('gameCode').textContent.split(': ')[1]
+                    });
+                }
+            }
         }
-    }
-}
 
         function copyGameCode() {
             const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];
             const shareUrl = `${window.location.origin}${window.location.pathname}?code=${gameCode}`;
-            
+
             navigator.clipboard.writeText(shareUrl).then(() => {
                 const toast = document.getElementById('copyToast');
                 toast.style.display = 'block';
@@ -264,6 +271,7 @@ function makeMove(cellIndex) {
                 }, 2000);
             });
         }
+
         function createGame() {
             socket.emit('createGame');
             addPopAnimation(document.querySelector('.container'));
@@ -279,25 +287,39 @@ function makeMove(cellIndex) {
 
 
         function makeMove(cellIndex) {
-            if (currentTurn) {
-                const cell = document.getElementsByClassName('cell')[cellIndex];
-                if (!cell.textContent) {
-                    socket.emit('makeMove', { 
-                        cellIndex, 
-                        gameCode: document.getElementById('gameCode').textContent.split(': ')[1] 
-                    });
-                }
+            if (!currentTurn) {
+                console.log('Not your turn');
+                return;
             }
+
+            const cell = document.getElementsByClassName('cell')[cellIndex];
+            if (cell.textContent) {
+                console.log('Cell already taken');
+                return;
+            }
+
+            const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];
+            console.log('Making move:', {
+                cellIndex,
+                gameCode,
+                playerMark
+            });
+            socket.emit('makeMove', {
+                cellIndex,
+                gameCode
+            });
         }
 
         function addPopAnimation(element) {
             element.classList.add('animate-pop');
             element.addEventListener('animationend', () => {
                 element.classList.remove('animate-pop');
-            }, { once: true });
+            }, {
+                once: true
+            });
         }
         // Check for game code in URL on page load
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             if (code) {
@@ -316,7 +338,9 @@ function makeMove(cellIndex) {
 
             // Update URL with game code
             const newUrl = `${window.location.pathname}?code=${gameCode}`;
-            window.history.pushState({ path: newUrl }, '', newUrl);
+            window.history.pushState({
+                path: newUrl
+            }, '', newUrl);
         });
 
         socket.on('gameJoined', (data) => {
@@ -324,11 +348,15 @@ function makeMove(cellIndex) {
             document.getElementById('joinForm').style.display = 'none';
             document.getElementById('status').textContent = "Game started! You are " + data.mark;
             playerMark = data.mark;
-            currentTurn = data.mark === 'X';
+            currentTurn = data.mark === 'X'; // X goes first
             addPopAnimation(document.getElementById('gameBoard'));
+            console.log('Game joined:', {
+                playerMark,
+                currentTurn
+            });
         });
-
         socket.on('updateGame', (data) => {
+            console.log('Game updated:', data);
             const cells = document.getElementsByClassName('cell');
             data.board.forEach((mark, index) => {
                 if (mark !== cells[index].textContent) {
@@ -337,9 +365,13 @@ function makeMove(cellIndex) {
                 }
                 cells[index].disabled = !!mark;
             });
-            
+
             currentTurn = data.currentPlayer === playerMark;
             document.getElementById('status').textContent = currentTurn ? 'Your turn!' : "Opponent's turn";
+            console.log('Turn updated:', {
+                currentTurn,
+                playerMark
+            });
         });
 
         socket.on('gameOver', (data) => {
@@ -348,11 +380,11 @@ function makeMove(cellIndex) {
                 cells[index].textContent = mark;
                 cells[index].disabled = true;
             });
-            
-            const statusText = data.winner ? 
-                (data.winner === playerMark ? 'You won! 🎉' : 'You lost! 😔') : 
+
+            const statusText = data.winner ?
+                (data.winner === playerMark ? 'You won! 🎉' : 'You lost! 😔') :
                 'Game ended in a draw! 🤝';
-            
+
             document.getElementById('status').textContent = statusText;
             currentTurn = false;
         });
@@ -362,4 +394,5 @@ function makeMove(cellIndex) {
         });
     </script>
 </body>
+
 </html>
