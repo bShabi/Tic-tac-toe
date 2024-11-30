@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 6,
+            "activePatchIndex": 11,
             "patches": [
                 {
                     "date": 1732963695931,
@@ -32,6 +32,26 @@
                 {
                     "date": 1732964475912,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -283,9 +283,9 @@\n             }, { once: true });\n         }\n \n         socket.on('gameCreated', (gameCode) => {\n-            document.getElementById('gameCode').style.display = 'block';\n+            document.getElementById('codeContainer').style.display = 'flex';\n             document.getElementById('gameCode').textContent = 'Game Code: ' + gameCode;\n             document.getElementById('status').textContent = 'Waiting for opponent...';\n             document.getElementById('gameBoard').style.display = 'grid';\n             document.getElementById('joinForm').style.display = 'none';\n"
+                },
+                {
+                    "date": 1732964977196,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -194,12 +194,12 @@\n             <button onclick=\"createGame()\">Create New Game</button>\n         </div>\n \n         <div class=\"code-container\" style=\"display: none;\" id=\"codeContainer\">\n-            <div id=\"gameCode\"></div>\n+            <div id=\"gameCode\" onclick=\"copyGameCode()\"></div>\n             <button onclick=\"shareGameCode()\" class=\"share-button\">Share Code</button>\n         </div>\n-        <div id=\"gameCode\"></div>\n+        \n         <div id=\"status\"></div>\n \n         <div id=\"gameBoard\">\n             <button class=\"cell\" ontouchstart=\"handleCellClick(0)\" onclick=\"handleCellClick(0)\"></button>\n"
+                },
+                {
+                    "date": 1732965022049,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -222,10 +222,10 @@\n         async function shareGameCode() {\n             const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];\n             const shareData = {\n                 title: 'Join my Tic-tac-toe game!',\n-                text: `Join my game with code: ${gameCode}`,\n-                url: window.location.href\n+                text: `Join my Tic-tac-toe game!`,\n+                url: `${window.location.origin}${window.location.pathname}?code=${gameCode}`\n             };\n \n             try {\n                 if (navigator.share) {\n@@ -281,9 +281,17 @@\n             element.addEventListener('animationend', () => {\n                 element.classList.remove('animate-pop');\n             }, { once: true });\n         }\n-\n+        // Check for game code in URL on page load\n+        window.addEventListener('load', function() {\n+            const urlParams = new URLSearchParams(window.location.search);\n+            const code = urlParams.get('code');\n+            if (code) {\n+                document.getElementById('gameCodeInput').value = code;\n+                joinGame();\n+            }\n+        });\n         socket.on('gameCreated', (gameCode) => {\n             document.getElementById('codeContainer').style.display = 'flex';\n             document.getElementById('gameCode').textContent = 'Game Code: ' + gameCode;\n             document.getElementById('status').textContent = 'Waiting for opponent...';\n"
+                },
+                {
+                    "date": 1732965034872,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -228,17 +228,15 @@\n             };\n \n             try {\n                 if (navigator.share) {\n-                    // Use native sharing if available (mobile devices)\n                     await navigator.share(shareData);\n                 } else {\n-                    // Fallback to clipboard copy\n-                    await navigator.clipboard.writeText(`Join my Tic-tac-toe game! Code: ${gameCode}`);\n-                    alert('Game code copied to clipboard!');\n+                    copyGameCode();\n                 }\n             } catch (err) {\n                 console.error('Error sharing:', err);\n+                copyGameCode();\n             }\n         }\n \n         function handleCellClick(cellIndex) {\n"
+                },
+                {
+                    "date": 1732965054016,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -247,8 +247,20 @@\n             }\n             makeMove(cellIndex);\n         }\n \n+        function copyGameCode() {\n+            const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];\n+            const shareUrl = `${window.location.origin}${window.location.pathname}?code=${gameCode}`;\n+            \n+            navigator.clipboard.writeText(shareUrl).then(() => {\n+                const toast = document.getElementById('copyToast');\n+                toast.style.display = 'block';\n+                setTimeout(() => {\n+                    toast.style.display = 'none';\n+                }, 2000);\n+            });\n+        }\n         function createGame() {\n             socket.emit('createGame');\n             addPopAnimation(document.querySelector('.container'));\n         }\n"
+                },
+                {
+                    "date": 1732965069724,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -308,8 +308,12 @@\n             document.getElementById('gameBoard').style.display = 'grid';\n             document.getElementById('joinForm').style.display = 'none';\n             playerMark = 'X';\n             addPopAnimation(document.getElementById('gameBoard'));\n+\n+            // Update URL with game code\n+            const newUrl = `${window.location.pathname}?code=${gameCode}`;\n+            window.history.pushState({ path: newUrl }, '', newUrl);\n         });\n \n         socket.on('gameJoined', (data) => {\n             document.getElementById('gameBoard').style.display = 'grid';\n"
                 }
             ],
             "date": 1732963695931,
