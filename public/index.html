@@ -4,93 +4,193 @@
     <title>Multiplayer Tic-tac-toe</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #f8fafc;
+            --cell-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-color: #1e293b;
+        }
+
+        * {
             margin: 0;
-            background-color: #f0f0f0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
         }
 
         .container {
-            text-align: center;
+            width: 100%;
+            max-width: 450px;
             background: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        #joinForm {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        button:active {
+            transform: translateY(1px);
         }
 
         #gameBoard {
             display: none;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px auto;
-            max-width: 300px;
+            gap: 0.75rem;
+            margin: 1.5rem auto;
+            max-width: 350px;
         }
 
         .cell {
-            width: 90px;
-            height: 90px;
-            background: #f8f9fa;
-            border: none;
-            border-radius: 8px;
-            font-size: 2.5em;
+            aspect-ratio: 1;
+            width: 100%;
+            background: var(--cell-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.2s;
         }
 
-        .cell:hover {
-            background: #e9ecef;
+        .cell:hover:not(:disabled) {
+            background: #f1f5f9;
+            transform: scale(1.02);
         }
 
-        #joinForm {
-            margin-bottom: 20px;
-        }
-
-        input, button {
-            padding: 10px;
-            margin: 5px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        #status {
-            margin: 20px 0;
-            font-weight: bold;
-            min-height: 24px;
+        .cell:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         #gameCode {
             display: none;
-            margin: 10px 0;
-            padding: 10px;
-            background: #e9ecef;
-            border-radius: 5px;
+            text-align: center;
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 1.25rem;
+            margin: 1rem 0;
+            border: 1px dashed var(--border-color);
+        }
+
+        #status {
+            text-align: center;
+            font-weight: 600;
+            min-height: 1.5rem;
+            margin: 1rem 0;
+            color: var(--primary-color);
+        }
+
+        .animate-pop {
+            animation: pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .cell {
+                font-size: 1.75rem;
+            }
+
+            button {
+                padding: 0.75rem 1rem;
+            }
+
+            #gameCode {
+                font-size: 1rem;
+                padding: 0.75rem;
+            }
         }
     </style>
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Multiplayer Tic-tac-toe</h1>
+        <h1>Tic-tac-toe</h1>
         
         <div id="joinForm">
-            <input type="text" id="gameCodeInput" placeholder="Enter game code">
-            <button onclick="joinGame()">Join Game</button>
+            <div class="input-group">
+                <input type="text" id="gameCodeInput" placeholder="Enter game code" autocomplete="off">
+                <button onclick="joinGame()">Join</button>
+            </div>
             <button onclick="createGame()">Create New Game</button>
         </div>
 
@@ -111,25 +211,40 @@
     </div>
 
     <script>
-        const socket = io('wss://tic-tac-toe-420d.onrender.com');
+        const socket = io();
         let playerMark = '';
         let currentTurn = false;
 
         function createGame() {
             socket.emit('createGame');
+            addPopAnimation(document.querySelector('.container'));
         }
 
         function joinGame() {
             const code = document.getElementById('gameCodeInput').value;
             if (code) {
                 socket.emit('joinGame', code);
+                addPopAnimation(document.querySelector('.container'));
             }
         }
 
         function makeMove(cellIndex) {
             if (currentTurn) {
-                socket.emit('makeMove', { cellIndex, gameCode: document.getElementById('gameCode').textContent.split(': ')[1] });
+                const cell = document.getElementsByClassName('cell')[cellIndex];
+                if (!cell.textContent) {
+                    socket.emit('makeMove', { 
+                        cellIndex, 
+                        gameCode: document.getElementById('gameCode').textContent.split(': ')[1] 
+                    });
+                }
             }
+        }
+
+        function addPopAnimation(element) {
+            element.classList.add('animate-pop');
+            element.addEventListener('animationend', () => {
+                element.classList.remove('animate-pop');
+            }, { once: true });
         }
 
         socket.on('gameCreated', (gameCode) => {
@@ -139,6 +254,7 @@
             document.getElementById('gameBoard').style.display = 'grid';
             document.getElementById('joinForm').style.display = 'none';
             playerMark = 'X';
+            addPopAnimation(document.getElementById('gameBoard'));
         });
 
         socket.on('gameJoined', (data) => {
@@ -147,25 +263,35 @@
             document.getElementById('status').textContent = "Game started! You are " + data.mark;
             playerMark = data.mark;
             currentTurn = data.mark === 'X';
+            addPopAnimation(document.getElementById('gameBoard'));
         });
 
         socket.on('updateGame', (data) => {
             const cells = document.getElementsByClassName('cell');
-            for (let i = 0; i < cells.length; i++) {
-                cells[i].textContent = data.board[i];
-            }
+            data.board.forEach((mark, index) => {
+                if (mark !== cells[index].textContent) {
+                    cells[index].textContent = mark;
+                    if (mark) addPopAnimation(cells[index]);
+                }
+                cells[index].disabled = !!mark;
+            });
+            
             currentTurn = data.currentPlayer === playerMark;
             document.getElementById('status').textContent = currentTurn ? 'Your turn!' : "Opponent's turn";
         });
 
         socket.on('gameOver', (data) => {
             const cells = document.getElementsByClassName('cell');
-            for (let i = 0; i < cells.length; i++) {
-                cells[i].textContent = data.board[i];
-            }
-            document.getElementById('status').textContent = data.winner ? 
-                (data.winner === playerMark ? 'You won!' : 'You lost!') : 
-                'Game ended in a draw!';
+            data.board.forEach((mark, index) => {
+                cells[index].textContent = mark;
+                cells[index].disabled = true;
+            });
+            
+            const statusText = data.winner ? 
+                (data.winner === playerMark ? 'You won! 🎉' : 'You lost! 😔') : 
+                'Game ended in a draw! 🤝';
+            
+            document.getElementById('status').textContent = statusText;
             currentTurn = false;
         });
 
