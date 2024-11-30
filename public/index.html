@@ -194,19 +194,23 @@
             <button onclick="createGame()">Create New Game</button>
         </div>
 
+        <div class="code-container" style="display: none;" id="codeContainer">
+            <div id="gameCode"></div>
+            <button onclick="shareGameCode()" class="share-button">Share Code</button>
+        </div>
         <div id="gameCode"></div>
         <div id="status"></div>
 
         <div id="gameBoard">
-            <button class="cell" onclick="makeMove(0)"></button>
-            <button class="cell" onclick="makeMove(1)"></button>
-            <button class="cell" onclick="makeMove(2)"></button>
-            <button class="cell" onclick="makeMove(3)"></button>
-            <button class="cell" onclick="makeMove(4)"></button>
-            <button class="cell" onclick="makeMove(5)"></button>
-            <button class="cell" onclick="makeMove(6)"></button>
-            <button class="cell" onclick="makeMove(7)"></button>
-            <button class="cell" onclick="makeMove(8)"></button>
+            <button class="cell" ontouchstart="handleCellClick(0)" onclick="handleCellClick(0)"></button>
+            <button class="cell" ontouchstart="handleCellClick(1)" onclick="handleCellClick(1)"></button>
+            <button class="cell" ontouchstart="handleCellClick(2)" onclick="handleCellClick(2)"></button>
+            <button class="cell" ontouchstart="handleCellClick(3)" onclick="handleCellClick(3)"></button>
+            <button class="cell" ontouchstart="handleCellClick(4)" onclick="handleCellClick(4)"></button>
+            <button class="cell" ontouchstart="handleCellClick(5)" onclick="handleCellClick(5)"></button>
+            <button class="cell" ontouchstart="handleCellClick(6)" onclick="handleCellClick(6)"></button>
+            <button class="cell" ontouchstart="handleCellClick(7)" onclick="handleCellClick(7)"></button>
+            <button class="cell" ontouchstart="handleCellClick(8)" onclick="handleCellClick(8)"></button>
         </div>
     </div>
 
@@ -214,6 +218,37 @@
         const socket = io();
         let playerMark = '';
         let currentTurn = false;
+
+        async function shareGameCode() {
+            const gameCode = document.getElementById('gameCode').textContent.split(': ')[1];
+            const shareData = {
+                title: 'Join my Tic-tac-toe game!',
+                text: `Join my game with code: ${gameCode}`,
+                url: window.location.href
+            };
+
+            try {
+                if (navigator.share) {
+                    // Use native sharing if available (mobile devices)
+                    await navigator.share(shareData);
+                } else {
+                    // Fallback to clipboard copy
+                    await navigator.clipboard.writeText(`Join my Tic-tac-toe game! Code: ${gameCode}`);
+                    alert('Game code copied to clipboard!');
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        }
+
+        function handleCellClick(cellIndex) {
+            event.preventDefault(); // Prevent double-firing
+            if (event.type === 'click' && event.clientX === 0 && event.clientY === 0) {
+                // Ignore synthetic click events from touch
+                return;
+            }
+            makeMove(cellIndex);
+        }
 
         function createGame() {
             socket.emit('createGame');
@@ -227,6 +262,7 @@
                 addPopAnimation(document.querySelector('.container'));
             }
         }
+
 
         function makeMove(cellIndex) {
             if (currentTurn) {
@@ -248,7 +284,7 @@
         }
 
         socket.on('gameCreated', (gameCode) => {
-            document.getElementById('gameCode').style.display = 'block';
+            document.getElementById('codeContainer').style.display = 'flex';
             document.getElementById('gameCode').textContent = 'Game Code: ' + gameCode;
             document.getElementById('status').textContent = 'Waiting for opponent...';
             document.getElementById('gameBoard').style.display = 'grid';
