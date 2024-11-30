@@ -248,15 +248,49 @@
         }
 
         function makeMove(cellIndex) {
-            if (currentTurn) {
-                const cell = document.getElementsByClassName('cell')[cellIndex];
-                if (!cell.textContent) {
-                    socket.emit('makeMove', {
-                        cellIndex,
-                        gameCode: document.getElementById('gameCode').textContent.split(': ')[1]
-                    });
-                }
+            if (!currentTurn) {
+                console.log('Not your turn');
+                return;
             }
+
+            const cell = document.getElementsByClassName('cell')[cellIndex];
+            if (cell.textContent) {
+                console.log('Cell already taken');
+                return;
+            }
+
+            let gameCode;
+            const codeElement = document.getElementById('gameCode');
+            if (codeElement && codeElement.textContent) {
+                gameCode = codeElement.textContent.split(': ')[1];
+            }
+
+            if (!gameCode) {
+                console.error('No game code found');
+                return;
+            }
+
+            console.log('Making move:', {
+                cellIndex,
+                gameCode,
+                playerMark,
+                currentTurn
+            });
+
+            socket.emit('makeMove', {
+                cellIndex,
+                gameCode
+            });
+        }
+        if (currentTurn) {
+            const cell = document.getElementsByClassName('cell')[cellIndex];
+            if (!cell.textContent) {
+                socket.emit('makeMove', {
+                    cellIndex,
+                    gameCode: document.getElementById('gameCode').textContent.split(': ')[1]
+                });
+            }
+        }
         }
 
         function copyGameCode() {
@@ -358,19 +392,24 @@
         socket.on('updateGame', (data) => {
             console.log('Game updated:', data);
             const cells = document.getElementsByClassName('cell');
+
+            // Update board
             data.board.forEach((mark, index) => {
-                if (mark !== cells[index].textContent) {
-                    cells[index].textContent = mark;
-                    if (mark) addPopAnimation(cells[index]);
-                }
+                cells[index].textContent = mark;
                 cells[index].disabled = !!mark;
             });
 
+            // Update turn
             currentTurn = data.currentPlayer === playerMark;
-            document.getElementById('status').textContent = currentTurn ? 'Your turn!' : "Opponent's turn";
+
+            // Update status message
+            const statusMessage = currentTurn ? 'Your turn!' : "Opponent's turn";
+            document.getElementById('status').textContent = statusMessage;
+
             console.log('Turn updated:', {
                 currentTurn,
-                playerMark
+                playerMark,
+                currentPlayer: data.currentPlayer
             });
         });
 
